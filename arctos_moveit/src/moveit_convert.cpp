@@ -1,6 +1,6 @@
-#include "ros/ros.h"
-#include "sensor_msgs/JointState.h"
-#include "moveo_moveit/ArmJointState.h"
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "moveo_moveit/msg/arm_joint_state.hpp"
 #include "math.h"
 
 moveo_moveit::ArmJointState arm_steps;
@@ -99,9 +99,25 @@ void cmd_cb(const sensor_msgs::JointState& cmd_arm)
   count=1;
 }
 
+class MoveoMoveit : public rclcpp:Node 
+{
+  public:
+    MoveoMoveit()
+    : Node("moveo_moveit")
+    {
+      publisher_ = this->create_publisher<std_msgs::msg::String>("/move_group/fake_controller_joint_states", 10);
+      timer_ = this->create_wall_timer(
+      500ms, std::bind(&MinimalPublisher::timer_callback, this));
+    }
+}
+
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "moveo_moveit");
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<MoveoMoveit>());
+  rclcpp::shutdown();
+
+  return 0;
   ros::NodeHandle nh;
   ROS_INFO_STREAM("In main function");
   ros::Subscriber sub = nh.subscribe("/move_group/fake_controller_joint_states",1000,cmd_cb);
